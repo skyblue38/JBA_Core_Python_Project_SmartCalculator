@@ -1,0 +1,222 @@
+type: edu
+custom_name: Error!
+files:
+- name: calculator/calculator.py
+  visible: true
+  text: |
+    running = True
+    while running:
+        numbers = []
+        line = ''
+        while line == '':
+            line = input()
+        if line == '/exit':
+            print("Bye!")
+            running = False
+            continue
+        if line == '/help':
+            print('The program adds and subtracts numbers in groups separate by commas')
+            continue
+        tokens = line.split()
+        if len(tokens) == 1:
+            print(tokens[0])
+            continue
+        sum = 0
+        adding = True
+        for tt in tokens:
+            t = tt.strip()
+            n = 0
+            for c in t:
+                if c == '-':
+                    adding = not adding
+                elif c == '+':
+                    adding = True
+                else:
+                    if c.isdigit():
+                        n = int(t)
+            if adding:
+                sum += n
+            else:
+                sum -= n
+        print(sum)
+  learner_created: false
+- name: test/__init__.py
+  visible: false
+  learner_created: false
+- name: test/tests.py
+  visible: false
+  text: |
+    from hstest.stage_test import *
+    from hstest.test_case import TestCase
+
+
+    class CalcTest(StageTest):
+        on_exit = False
+
+        def generate(self) -> List[TestCase]:
+            return [TestCase(stdin=['/help', self.test_1, self.test_2]),
+                    TestCase(stdin=['7 + 1 + 4', self.test_3, self.test_4, self.test_5, self.test_6,
+                                    self.test_7, self.test_8, self.test_9]),
+                    TestCase(stdin=['123+', self.test_10, self.test_11, self.test_12,
+                                    self.test_13, self.test_14, self.test_15]),
+                    TestCase(stdin=['14       -   12', self.test_16, self.test_17])]
+
+        # test of help command
+        def test_1(self, output):
+            output = str(output).lower().strip()
+            if len(output.split(" ")) < 3:
+                return CheckResult.wrong("It seems like there was no any \"help\" message.")
+            return ""
+
+        # test of an empty input
+        def test_2(self, output):
+            output = str(output)
+            if len(output) != 0:
+                return CheckResult.wrong("Incorrect response to an empty string. "
+                                         "The program should not print anything.")
+            self.on_exit = True
+            return "/exit"
+
+        # the previous stage tests #################################################
+        # sum of positive
+        def test_3(self, output):
+            output = str(output).lower().strip()
+            if output != "12":
+                return CheckResult.wrong("The program cannot sum more than two numbers.")
+            return "23 - 17 - 13"
+
+        # mixed operations
+        def test_4(self, output):
+            output = str(output).lower().strip()
+            if output != "-7":
+                return CheckResult.wrong("Incorrect sum of positive and negative numbers.")
+            return "33 + 21 + 11 + 49 - 32 - 9 + 1 - 80 + 4"
+
+        # mixed operations
+        def test_5(self, output):
+            output = str(output).lower().strip()
+            if output != "-2":
+                return CheckResult.wrong("Incorrect sum of positive and negative numbers.")
+            return "101"
+
+        # one positive
+        def test_6(self, output):
+            output = str(output).lower().strip()
+            if output != "101":
+                return CheckResult.wrong("The program printed not the same number that was entered "
+                                         "(when one number is entered it is a valid expression).")
+            return "-302"
+
+        # one negative
+        def test_7(self, output):
+            output = str(output).lower().strip()
+            if output != "-302":
+                return CheckResult.wrong("The program printed not the same number that was entered.")
+            return "10 - 7 - 3"
+
+        # sum is equal to zero
+        def test_8(self, output):
+            output = str(output).lower().strip()
+            if output != "0":
+                return CheckResult.wrong("The problem when sum is equal to 0 has occurred.")
+            return "5 --- 2 ++++++ 4 -- 2 ---- 1"
+
+        # multiple operators
+        def test_9(self, output):
+            output = str(output).lower().strip()
+            if output != "10":
+                return CheckResult.wrong("The program cannot process multiple operations with several operators.")
+            self.on_exit = True
+            return "/exit"
+
+        # tests for this step ######################################################
+        # test of invalid expression
+        def test_10(self, output):
+            output = str(output).lower().strip()
+            if "invalid" not in output:
+                return CheckResult.wrong("The program cannot process an invalid expression.")
+            return "321-"
+
+        # test of invalid expression
+        def test_11(self, output):
+            output = str(output).lower().strip()
+            if "invalid" not in output:
+                return CheckResult.wrong("The program cannot process an invalid expression.")
+            return "+7"
+
+        # input one number with plus in front of it
+        def test_12(self, output):
+            output = str(output).lower().strip()
+            if output != "7":
+                return CheckResult.wrong("The program not correctly processes useless plus sign.")
+            return "abc"
+
+        # not numbers in input
+        def test_13(self, output):
+            output = str(output).lower().strip()
+            if "invalid" not in output:
+                return CheckResult.wrong("The program should print \"Invalid expression\" " +
+                                         "when not a numbers are entered")
+            return "one + two + three"
+
+        # not numbers in input
+        def test_14(self, output):
+            output = str(output).lower().strip()
+            if "invalid" not in output:
+                return CheckResult.wrong("The program should print \"Invalid expression\" " +
+                                         "when not a numbers are entered")
+            return "/go"
+
+        # test of nonexistent command
+        def test_15(self, output):
+            output = str(output).lower().strip()
+            if "unknown" not in output:
+                return CheckResult.wrong("The program should print \"Unknown command\" " +
+                                         "when a nonexistent command is entered.")
+            self.on_exit = True
+            return "/exit"
+
+        # test input with lots of spaces
+        def test_16(self, output):
+            output = str(output).lower().strip()
+            if output != "2":
+                return CheckResult.wrong("The program cannot process several spaces in the operation.")
+            return "5  +  2"
+
+        # test with additional spaces
+        def test_17(self, output):
+            output = str(output).lower().strip()
+            if output != "7":
+                return CheckResult.wrong("The program cannot process several spaces in the operation.")
+            self.on_exit = True
+            return "/exit"
+
+        def check(self, reply: str, attach) -> CheckResult:
+            if self.on_exit:
+                reply = reply.strip().lower().split('\n')
+                self.on_exit = False
+                if 'bye' not in reply[-1]:
+                    return CheckResult.wrong("Your program didn't print \"bye\" after entering \"/exit\".")
+                else:
+                    return CheckResult.correct()
+            else:
+                return CheckResult.wrong("The program ended prematurely")
+
+
+    if __name__ == '__main__':
+        CalcTest("calculator.calculator").run_tests()
+  learner_created: false
+- name: tests.py
+  visible: false
+  text: |
+    from test.tests import CalcTest
+
+    if __name__ == '__main__':
+        CalcTest("calculator.calculator").run_tests()
+  learner_created: false
+feedback_link: https://hyperskill.org/learn/step/6594#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Sat, 31 Dec 2022 03:19:20 UTC"
+record: 5
